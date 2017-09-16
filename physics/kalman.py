@@ -85,7 +85,7 @@ def plotdf(df, fig3d, color='r'):
 
 def kf_filter(xdf, R_std, Q_std, pici):
     fig = plt.figure(figsize=(12, 8))
-    coordinates = ['x', 'y']
+    coordinates = ['x', 'y', 'z']
     ydf = pd.DataFrame(columns=['t', 'x', 'x_std', 'y', 'y_std', 'z', 'z_std'])
     ydf['t'] = xdf['t']
     for i, ax in enumerate(coordinates):
@@ -93,16 +93,16 @@ def kf_filter(xdf, R_std, Q_std, pici):
         my = run_simulate(xdf, ax, R_std, Q_std)
         ydf[ax] = my[:, 2, 0]
         ydf[ax+'_std'] = my[:, 3, 0]
-    plt.subplot(2, 2, 3)
-    ax = 'z'
-    bounce_t = (xdf[xdf['z'] == xdf['z'].min()]['t']).values[0]
-    xdf_before = xdf[xdf['t'] < bounce_t]
-    mu, zs1 = kf_simulate(xdf_before, R_std, Q_std, ax=ax)
-    plot_bp(mu, zs1, ax)
+    # plt.subplot(2, 2, 3)
+    # ax = 'z'
+    # bounce_t = (xdf[xdf['z'] == xdf['z'].min()]['t']).values[0]
+    # xdf_before = xdf[xdf['t'] < bounce_t]
+    # mu, zs1 = kf_simulate(xdf_before, R_std, Q_std, ax=ax)
+    # plot_bp(mu, zs1, ax)
     # bounce_t = xdf[xdf['z'] < 50]['t'].mean()
     # ydf.loc[ydf['t'] > bounce_t, 'z'] = xdf.loc[ydf['t'] > bounce_t, 'z']
-    ydf.loc[xdf['t'] < bounce_t, 'z'] = mu[:, 2, 0]
-    ydf.loc[xdf['t'] < bounce_t, 'z_std'] = mu[:, 3, 0]
+    # ydf.loc[xdf['t'] < bounce_t, 'z'] = mu[:, 2, 0]
+    # ydf.loc[xdf['t'] < bounce_t, 'z_std'] = mu[:, 3, 0]
     ax1 = fig.add_subplot(224, projection='3d')
     ax1.auto_scale_xyz([100, 1000], [-200, 3000], [0, 400])
     sc1 = plotdf(xdf, ax1, color='r')
@@ -114,15 +114,15 @@ def kf_filter(xdf, R_std, Q_std, pici):
 
 
 # idxs = [0, 6, 9, 10, 20, 22, 26, 44, 49]
-idxs = [10, 26, 49]
-# idx = 40
-for idx in idxs:
-    xdf = dfs[idx]
-    R_std = 0.36
-    Q_std = 0.01
-    ydf = kf_filter(xdf, R_std, Q_std, idx)
+# idxs = [10, 26, 49]
+# # idx = 40
+# for idx in idxs:
+#     xdf = dfs[idx]
+#     R_std = 0.36
+#     Q_std = 0.01
+#     ydf = kf_filter(xdf, R_std, Q_std, idx)
 
-
+dfs[75]
 ydfs = []
 for i, xdf in enumerate(dfs):
     R_std = 0.35
