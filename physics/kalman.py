@@ -1,13 +1,16 @@
+import matplotlib
+matplotlib.use('Agg')
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from filterpy.stats import plot_covariance_ellipse
 from filterpy.kalman import KalmanFilter
-import numpy as np
 from filterpy.stats import plot_covariance_ellipse
 from filterpy.common import Q_discrete_white_noise
 from scipy.linalg import block_diag
 from physics import book_plots as bp
-import pandas as pd
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
 
 df = pd.read_csv('data/data.csv')
 ids = df[df.isnull().any(axis=1)].index
@@ -59,7 +62,7 @@ def kf_simulate(xdf, R_std, Q_std, ax='z'):
 def plot_bp(mu, zs, ax):
     bp.plot_filter(mu[:, 0], mu[:, 2])
     bp.plot_measurements(zs[:, 0], zs[:, 1])
-    plt.legend(loc=2)
+    plt.legend(loc=1)
     plt.ylabel(ax)
     plt.xlabel('t')
     plt.xlim((-0.1, 0.6))
@@ -72,7 +75,7 @@ def run_simulate(xdf, ax, R_std, Q_std):
 
 
 def plotdf(df, fig3d, color='r'):
-    sc = fig3d.scatter(df['x'], df['y'], df['z'], c=color)
+    sc = fig3d.scatter(df['x'], df['y'], df['z'], c=color, alpha=0.3)
     fig3d.set_xlabel('x')
     fig3d.set_ylabel('y')
     fig3d.set_zlabel('z')
@@ -80,9 +83,9 @@ def plotdf(df, fig3d, color='r'):
     return sc
 
 
-def kf_filter(xdf, R_std, Q_std):
+def kf_filter(xdf, R_std, Q_std, pici):
     fig = plt.figure(figsize=(12, 8))
-    coordinates = ['x', 'y', 'z']
+    coordinates = ['x', 'y']
     ydf = pd.DataFrame(columns=['t', 'x', 'x_std', 'y', 'y_std', 'z', 'z_std'])
     ydf['t'] = xdf['t']
     for i, ax in enumerate(coordinates):
@@ -90,19 +93,45 @@ def kf_filter(xdf, R_std, Q_std):
         my = run_simulate(xdf, ax, R_std, Q_std)
         ydf[ax] = my[:, 2, 0]
         ydf[ax+'_std'] = my[:, 3, 0]
-
+    plt.subplot(2, 2, 3)
+    ax = 'z'
+    bounce_t = (xdf[xdf['z'] == xdf['z'].min()]['t']).values[0]
+    xdf_before = xdf[xdf['t'] < bounce_t]
+    mu, zs1 = kf_simulate(xdf_before, R_std, Q_std, ax=ax)
+    plot_bp(mu, zs1, ax)
+    # bounce_t = xdf[xdf['z'] < 50]['t'].mean()
+    # ydf.loc[ydf['t'] > bounce_t, 'z'] = xdf.loc[ydf['t'] > bounce_t, 'z']
+    ydf.loc[xdf['t'] < bounce_t, 'z'] = mu[:, 2, 0]
+    ydf.loc[xdf['t'] < bounce_t, 'z_std'] = mu[:, 3, 0]
     ax1 = fig.add_subplot(224, projection='3d')
     ax1.auto_scale_xyz([100, 1000], [-200, 3000], [0, 400])
     sc1 = plotdf(xdf, ax1, color='r')
     sc2 = plotdf(ydf, ax1, color='b')
     ax1.legend([sc1, sc2], ['data', 'filtered data'])
+    plt.savefig("data/kf_pics/kf_" + str(pici) + '.png')
+    plt.close()
     return ydf
 
 
-xdf = dfs[22]
-R_std = 2
-Q_std = 1
-ydf = kf_filter(xdf, R_std, Q_std)
-plt.savefig()
+# idxs = [0, 6, 9, 10, 20, 22, 26, 44, 49]
+idxs = [10, 26, 49]
+# idx = 40
+for idx in idxs:
+    xdf = dfs[idx]
+    R_std = 0.36
+    Q_std = 0.01
+    ydf = kf_filter(xdf, R_std, Q_std, idx)
+
+
+ydfs = []
+for i, xdf in enumerate(dfs):
+    R_std = 0.35
+    Q_std = 0.04
+    ydf = kf_filter(xdf, R_std, Q_std, i)
+    ydfs.append(ydf)
+
+import pickle
+pickle.dump(ydfs, open('data/ydfs.p', 'wb'))
+# ydfs = pickle.load(open('data/ydfs.p', 'rb'))
 
 
