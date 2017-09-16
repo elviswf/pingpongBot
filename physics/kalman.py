@@ -56,7 +56,7 @@ def kf_simulate(xdf, R_std, Q_std, ax='z'):
 
 
 # plot results
-def plot(mu, zs, ax):
+def plot_bp(mu, zs, ax):
     bp.plot_filter(mu[:, 0], mu[:, 2])
     bp.plot_measurements(zs[:, 0], zs[:, 1])
     plt.legend(loc=2)
@@ -65,32 +65,44 @@ def plot(mu, zs, ax):
     plt.xlim((-0.1, 0.6))
 
 
-def run(xdf, ax):
-    R_std = 1
-    Q_std = 1
+def run_simulate(xdf, ax, R_std, Q_std):
     mu, zs1 = kf_simulate(xdf, R_std, Q_std, ax=ax)
-    plot(mu, zs1, ax)
-    return zs1
+    plot_bp(mu, zs1, ax)
+    return mu
 
 
-def plotdf(df, fig3d):
-    fig3d.scatter(df['x'], df['y'], df['z'])
+def plotdf(df, fig3d, color='r'):
+    sc = fig3d.scatter(df['x'], df['y'], df['z'], c=color)
     fig3d.set_xlabel('x')
     fig3d.set_ylabel('y')
     fig3d.set_zlabel('z')
     plt.show()
+    return sc
+
+
+def kf_filter(xdf, R_std, Q_std):
+    fig = plt.figure(figsize=(12, 8))
+    coordinates = ['x', 'y', 'z']
+    ydf = pd.DataFrame(columns=['t', 'x', 'x_std', 'y', 'y_std', 'z', 'z_std'])
+    ydf['t'] = xdf['t']
+    for i, ax in enumerate(coordinates):
+        plt.subplot(2, 2, i + 1)
+        my = run_simulate(xdf, ax, R_std, Q_std)
+        ydf[ax] = my[:, 2, 0]
+        ydf[ax+'_std'] = my[:, 3, 0]
+
+    ax1 = fig.add_subplot(224, projection='3d')
+    ax1.auto_scale_xyz([100, 1000], [-200, 3000], [0, 400])
+    sc1 = plotdf(xdf, ax1, color='r')
+    sc2 = plotdf(ydf, ax1, color='b')
+    ax1.legend([sc1, sc2], ['data', 'filtered data'])
+    return ydf
 
 
 xdf = dfs[22]
-fig = plt.figure()
-coordinates = ['x', 'y', 'z']
-ydf = pd.DataFrame(columns=coordinates)
-for i, ax in enumerate(coordinates):
-    plt.subplot(2, 2, i + 1)
-    ydf[ax] = run(xdf, ax)[:, 1, 0]
+R_std = 2
+Q_std = 1
+ydf = kf_filter(xdf, R_std, Q_std)
+plt.savefig()
 
-ax1 = fig.add_subplot(224, projection='3d')
-ax1.auto_scale_xyz([100, 1000], [-200, 3000], [0, 400])
-plotdf(xdf, ax1)
-plotdf(ydf, ax1)
-plt.legend(loc='best')
+
