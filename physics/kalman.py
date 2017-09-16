@@ -43,7 +43,7 @@ def tracker1(R_std, Q_std):
 
 # simulate robot movement
 def kf_simulate(xdf, R_std, Q_std, ax='z'):
-    zs = np.array([xdf['t'], xdf[ax]]).T
+    zs = np.array([xdf['x'], xdf[ax]]).T
     zs = np.expand_dims(zs, axis=2)
 
     robot_tracker = tracker1(R_std, Q_std)
@@ -83,9 +83,9 @@ def plotdf(df, fig3d, color='r'):
     return sc
 
 
-def kf_filter(xdf, R_std, Q_std, pici):
+def kf_filter(xdf, R_std, Q_std, pici, save_dir='kf_pics'):
     fig = plt.figure(figsize=(12, 8))
-    coordinates = ['x', 'y', 'z']
+    coordinates = ['y', 'z']
     ydf = pd.DataFrame(columns=['t', 'x', 'x_std', 'y', 'y_std', 'z', 'z_std'])
     ydf['t'] = xdf['t']
     for i, ax in enumerate(coordinates):
@@ -103,35 +103,46 @@ def kf_filter(xdf, R_std, Q_std, pici):
     # ydf.loc[ydf['t'] > bounce_t, 'z'] = xdf.loc[ydf['t'] > bounce_t, 'z']
     # ydf.loc[xdf['t'] < bounce_t, 'z'] = mu[:, 2, 0]
     # ydf.loc[xdf['t'] < bounce_t, 'z_std'] = mu[:, 3, 0]
+    ydf['z'] = xdf['z']
     ax1 = fig.add_subplot(224, projection='3d')
     ax1.auto_scale_xyz([100, 1000], [-200, 3000], [0, 400])
     sc1 = plotdf(xdf, ax1, color='r')
     sc2 = plotdf(ydf, ax1, color='b')
     ax1.legend([sc1, sc2], ['data', 'filtered data'])
-    plt.savefig("data/kf_pics/kf_" + str(pici) + '.png')
+    plt.savefig('data/' + save_dir + '/kf_' + str(pici) + '.png')
     plt.close()
     return ydf
 
 
+def run_kf(dfs, save_dir='kf_pics', R_std=0.35, Q_std=0.04):
+    ydfs = []
+    for i, xdf in enumerate(dfs):
+        ydf = kf_filter(xdf, R_std, Q_std, i, save_dir)
+        ydfs.append(ydf)
+    return ydfs
+
+
 # idxs = [0, 6, 9, 10, 20, 22, 26, 44, 49]
-# idxs = [10, 26, 49]
-# # idx = 40
-# for idx in idxs:
-#     xdf = dfs[idx]
-#     R_std = 0.36
-#     Q_std = 0.01
-#     ydf = kf_filter(xdf, R_std, Q_std, idx)
+# idx = 40
+idxs = [26]
+for idx in idxs:
+    xdf = dfs[idx]
+    R_std = 0.36
+    Q_std = 0.01
+    ydf = kf_filter(xdf, R_std, Q_std, idx)
 
-dfs[75]
-ydfs = []
-for i, xdf in enumerate(dfs):
-    R_std = 0.35
-    Q_std = 0.04
-    ydf = kf_filter(xdf, R_std, Q_std, i)
-    ydfs.append(ydf)
 
-import pickle
-pickle.dump(ydfs, open('data/ydfs.p', 'wb'))
+# dfs[75]
+#
+# ydfs = []
+# for i, xdf in enumerate(dfs):
+#     R_std = 0.35
+#     Q_std = 0.04
+#     ydf = kf_filter(xdf, R_std, Q_std, i)
+#     ydfs.append(ydf)
+#
+# import pickle
+# pickle.dump(ydfs, open('data/ydfs.p', 'wb'))
 # ydfs = pickle.load(open('data/ydfs.p', 'rb'))
-
-
+#
+# ydfs[0].to_csv("trajectory_kf0.csv")
