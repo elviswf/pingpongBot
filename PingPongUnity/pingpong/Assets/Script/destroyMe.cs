@@ -13,7 +13,7 @@ public class destroyMe : MonoBehaviour {
 
 	IEnumerator DestroyMe()
 	{
-		yield return new WaitForSeconds (12f);
+		yield return new WaitForSeconds (0f);
 		Destroy (gameObject); 
 	}
 }

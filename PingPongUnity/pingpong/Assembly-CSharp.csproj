@@ -54,7 +54,13 @@
      <Compile Include="Assets\Script\destroyMe.cs" />
      <Compile Include="Assets\Script\tracePingpong.cs" />
      <None Include="Assets\Resources\test.txt" />
-     <None Include="Assets\Resources\trace.txt" />
+     <None Include="Assets\Resources\trace4.txt" />
+     <None Include="Assets\Resources\trace1.txt" />
+     <None Include="Assets\Resources\trace5.txt" />
+     <None Include="Assets\Resources\trace0.txt" />
+     <None Include="Assets\Resources\trace3.txt" />
+     <None Include="Assets\Resources\trace2.txt" />
+     <None Include="Assets\Resources\trace6.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
